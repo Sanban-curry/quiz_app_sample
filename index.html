@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    
+    <title>クイズ練習</title>
+</head>
+
+<body>
+    <header>
+        <h1>クイズ練習</h1>
+    </header>
+    <main>
+        <p id="quest">ここに問題が出題されます</p>
+        <p id="content">
+            <input type="radio" name="toi" value="1"><span id="toi1">選択肢１</span>
+            <input type="radio" name="toi" value="2"><span id="toi2">選択肢２</span>
+            <input type="radio" name="toi" value="3"><span id="toi3">選択肢３</span>
+        </p>
+    </main>
+    <button id="goNext">スタート</button>
+
+    <h2>問題の追加</h2>
+    <p>追加する場所</p>
+    <select name="" id="appQue"></select>
+    <p>問題文</p>
+    <textarea id="quetion" cols="30" rows="10"></textarea>
+    <p>解答（左から１～３）</p>
+    <input type="text" id="kaito1">
+    <input type="text" id="kaito2">
+    <input type="text" id="kaito3">
+    <p>正解</p>
+    <input type="radio" name="kaito" value="1">解答1
+    <input type="radio" name="kaito" value="2">解答2
+    <input type="radio" name="kaito" value="3">解答3<br>
+    <button id="save">保存</button>
+    <button id="appSamQ">サンプル問題の追加</button>
+
+    <h2>問題の削除</h2>
+    <select name="" id="delQue"></select>
+    <button id="delete">削除</button>
+
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script>
+
+    //問題をLocalStorageから戻す
+    
+    function IsThereQuetion(){
+        let obj = {};
+        for(let i=1; i<6; i++){
+            let k = `Q ${i}`;
+            if (localStorage.getItem(k)){
+                let v = localStorage.getItem(k);
+                let array = JSON.parse(v);
+                obj[k] = array;                
+            }
+        }
+        return obj;
+    }
+
+    //最初の問題を出す
+
+     function askQuetion(i){
+        let index = `Q ${i}`;
+        if(object[index]){
+        $("h1").html(`クイズ練習　第${count}問目`);
+        $("#quest").text(object[index][0]);
+        $("#toi1").text(object[index][1][0]);
+        $("#toi2").text(object[index][1][1]);
+        $("#toi3").text(object[index][1][2]);
+        $("#goNext").text("答えの選択肢を選んでね。");
+        }
+    }
+
+    function checkTheAnswerAndGoNext(i){   
+        $("[name=toi]").on("click", function(){
+            let index = `Q ${i}`;
+            if(object[index]){
+                if ($(this).val() == object[index][2]){
+                    alert("さすが、大正解！");
+                    correct_num ++;
+                    count ++;
+                }else{
+                    alert("残念、不正解！");
+                    count ++;
+                
+                }
+                
+            }
+
+            i++;
+            checkFinish(i);
+            
+        });
+    }
+
+    function checkFinish(i){
+        
+        if (i >= 6){
+                $("#goNext").text("終了！結果を見る")
+
+                $("#goNext").on("click", function(){
+
+                    correct_per = Math.round(( correct_num / (count - 1) ) * 100);
+                    $("h1").html(`クイズ練習 結果発表`);
+                    $("#quest").text("結果は、");
+                    $("[name=toi]").hide();
+                    $("#content").html(`正解数：${correct_num}   正解率：${correct_per}%`);
+
+                    $("#goNext").text("お疲れ様でした");
+                    
+                });
+
+            }else{
+                askQuetion(i);
+
+            }
+
+
+    }
+
+    let count = 1;
+    let correct_num = 0;
+    let i = 1;
+    let object = IsThereQuetion();
+     $("#goNext").on("click", function(){
+           askQuetion(i);
+        });
+    checkTheAnswerAndGoNext(i);
+
+
+    //問題の追加
+
+    $("#save").on("click", function(){
+        const key = $("#appQue").val();
+        const kaito = [$("#kaito1").val(), $("#kaito2").val(), $("#kaito3").val()]
+        const val = [$("#quetion").val(), kaito , $("[name=kaito]").val()];
+        const json = JSON.stringify(val);
+        localStorage.setItem(key, json);
+        alert("保存しました。");
+    });
+
+    
+    //例題3つの追加
+    const qs = [
+        "通るときには閉まって、通らないときには開いているものは何?",
+        "話すことがとても好きな道具は何?",
+        "世界の真ん中にいる虫は何?"
+    ]; 
+
+    //回答選択肢[多重配列]  
+    const toi = [
+        [ "踏み切り", "洗濯機", "冷蔵庫" ], 
+        [ "スプーン", "シャベル", "しゃもじ" ],
+        [ "てんとう虫", "カマキリ", "蚊" ]
+    ]; 
+ 
+    //答え[配列]
+    const ans=[ 1, 2, 3 ]
+
+
+    $("#appSamQ").on("click", function(){
+        for (let i=0; i<3; i++){
+            let k = `Q ${i+1}`;
+            let v = [qs[i], toi[i], ans[i]];
+            let jsonSam = JSON.stringify(v);
+            localStorage.setItem(k,jsonSam);
+            
+        }
+        alert("保存しました。");
+             
+    });
+
+
+    //問題の削除
+
+    let str = "";
+
+    for (let i=1; i<6; i++){
+        str += `<option>Q ${i}</option>`;
+    }
+
+    $("#delQue").html(str);
+    $("#appQue").html(str);
+    
+
+    $("#delete").on("click", function(){
+        localStorage.removeItem($("#delQue").val());
+        alert("削除しました。");
+    });
+
+
+    
+    </script>
+</body>
+
+</html>
